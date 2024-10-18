@@ -55,26 +55,44 @@ const segmentationData = [
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
 export function ImprovedDashboard() {
+  const [autoReplyMessage, setAutoReplyMessage] = useState("");
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const [autoReplyMessage, setAutoReplyMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
+  const handleSearchSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Navigate to the search page with the query as a URL parameter
-    if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
-    }
-  };
 
-  const handleAutoReply = (conversationId: number) => {
-    // Implement auto-reply functionality here
-    console.log(
-      "Sending auto-reply to conversation:",
-      conversationId,
-      "Message:",
-      autoReplyMessage
-    );
+    setLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("http://localhost:8000/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ question: searchQuery }), // Send the search query to the backend
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      // Log the data received from the backend
+      console.log("Search results:", data);
+
+      // Navigate to a new page (e.g., /search-results) and pass the data through query params or session storage
+      sessionStorage.setItem("searchResults", JSON.stringify(data.documents));
+      router.push("/search"); // Redirect to search-results page
+    } catch (err) {
+      setError(`Failed to search: ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
