@@ -1,5 +1,5 @@
-import { ImprovedDashboard } from "@/components/improved-dashboard"
+import { ImprovedDashboard } from "./dashboard/improved-dashboard";
 
 export default function Page() {
-  return <ImprovedDashboard />
+  return <ImprovedDashboard />;
 }

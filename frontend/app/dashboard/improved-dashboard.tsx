@@ -1,9 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { useRouter } from "next/navigation";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 import {
   PieChart,
   Pie,
@@ -48,12 +54,16 @@ const segmentationData = [
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
 
 export function ImprovedDashboard() {
+  const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [autoReplyMessage, setAutoReplyMessage] = useState("");
 
-  const handleSearch = () => {
-    // Implement search functionality here
-    console.log("Searching for:", searchQuery);
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Navigate to the search page with the query as a URL parameter
+    if (searchQuery.trim()) {
+      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+    }
   };
 
   const handleAutoReply = (conversationId: number) => {
@@ -85,7 +95,7 @@ export function ImprovedDashboard() {
                 size={20}
               />
             </div>
-            <Button onClick={handleSearch}>Search</Button>
+            <Button onClick={handleSearchSubmit}>Search</Button>
             <Bell className="text-primary-foreground" size={24} />
           </div>
         </div>
