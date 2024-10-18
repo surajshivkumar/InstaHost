@@ -1,0 +1,141 @@
+{
+  "uuid": "abcdef12-3456-7890-abcd-ef1234567890",
+  "created_at": "2024-06-12T10:45:30.123456",
+  "updated_at": "2024-06-12T10:45:30.123456",
+  "dialog": [
+    {
+      "alg": "SHA-512",
+      "url": "https://fake-vcons.s3.amazonaws.com/2024/06/12/abcdef12-3456-7890-abcd-ef1234567890.mp3",
+      "meta": { "direction": "in", "disposition": "ANSWERED" },
+      "type": "recording",
+      "start": "2024-06-12T10:45:30.123456",
+      "parties": [1, 0],
+      "duration": 65.432,
+      "filename": "abcdef12-3456-7890-abcd-ef1234567890.mp3",
+      "mimetype": "audio/mp3",
+      "signature": "X3NKq84kls4NtLxCDkSEHc0yAqe5MHNkzU8N6EgkfNvP-QJdjsoD4qv12rH_mFDfk83GzMf7hDjK-WM2IbL90"
+    }
+  ],
+  "parties": [
+    {
+      "tel": "+1234567890",
+      "meta": { "role": "agent" },
+      "name": "Alice Johnson",
+      "mailto": "alice.johnson@hotel.com"
+    },
+    {
+      "tel": "+0987654321",
+      "meta": { "role": "customer" },
+      "name": "Tom Walker",
+      "email": "tom.walker@gmail.com"
+    }
+  ],
+  "attachments": [
+    {
+      "type": "generation_info",
+      "encoding": "none",
+      "body": {
+        "agent_name": "Alice Johnson",
+        "customer_name": "Tom Walker",
+        "business": "Luxury Hotel",
+        "problem": "room service",
+        "emotion": "frustrated",
+        "prompt": "\nGenerate a detailed conversation between an agent and a customer who is frustrated with room service. The agent should be polite and try to resolve the issue. The conversation should be 15 lines long, covering personal details, complaint details, and ending with a resolution. Spell out numbers in the personal details.\n",
+        "created_on": "2024-06-12T10:45:30.123456",
+        "model": "gpt-4"
+      }
+    }
+  ],
+  "analysis": [
+    {
+      "type": "transcript",
+      "dialog": 0,
+      "vendor": "openai",
+      "encoding": "none",
+      "body": [
+        {
+          "speaker": "Agent",
+          "message": "Hello, this is Alice from Luxury Hotel. Could I have your name, please?"
+        },
+        {
+          "speaker": "Customer",
+          "message": "Hi, I'm Tom Walker."
+        },
+        {
+          "speaker": "Agent",
+          "message": "Nice to meet you, Tom. How can I assist you today?"
+        },
+        {
+          "speaker": "Customer",
+          "message": "I'm really frustrated with the room service. I ordered breakfast an hour ago, the food that arrived was rotten."
+        },
+        {
+          "speaker": "Agent",
+          "message": "I'm really sorry to hear that, Tom. Could you provide me with your room number and the time you placed the order?"
+        },
+        {
+          "speaker": "Customer",
+          "message": "Sure, my room number is three zero five, and I placed the order at seven thirty AM."
+        },
+        {
+          "speaker": "Agent",
+          "message": "Thank you, Tom. I will check with the kitchen right away and make sure your order is prioritized."
+        },
+        {
+          "speaker": "Customer",
+          "message": "I hope it comes soon. I'm really hungry."
+        },
+        {
+          "speaker": "Agent",
+          "message": "I'll do my best to make sure it gets to you in the next ten minutes. I really appreciate your patience."
+        },
+        {
+          "speaker": "Customer",
+          "message": "Thanks, Alice. I hope this doesn't happen again."
+        },
+        {
+          "speaker": "Agent",
+          "message": "You're welcome, Tom. We value your feedback and will work to improve our service. Have a great day!"
+        }
+      ],
+      "vendor_schema": {
+        "model": "gpt-4",
+        "prompt": "\nGenerate a detailed conversation between an agent and a customer who is frustrated with room service. The agent should be polite and try to resolve the issue. The conversation should be 15 lines long, covering personal details, complaint details, and ending with a resolution. Spell out numbers in the personal details.\n"
+      }
+    },
+    {
+      "type": "sentiment_analysis",
+      "dialog": 0,
+      "vendor": "openai",
+      "encoding": "none",
+      "body": {
+        "overall_sentiment": "negative",
+        "details": [
+          {
+            "speaker": "Customer",
+            "sentiment": "frustrated",
+            "evidence": "I'm really frustrated with the room service. I ordered breakfast an hour ago."
+          },
+          {
+            "speaker": "Agent",
+            "sentiment": "apologetic",
+            "evidence": "I'm really sorry to hear that, Tom."
+          }
+        ]
+      }
+    },
+    {
+      "type": "keyword_extraction",
+      "dialog": 0,
+      "vendor": "openai",
+      "encoding": "none",
+      "body": [
+        "room service",
+        "breakfast",
+        "frustrated",
+        "order delay",
+        "customer service"
+      ]
+    }
+  ]
+}
