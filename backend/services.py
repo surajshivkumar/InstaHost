@@ -31,7 +31,7 @@ def load_processed_files(directory: str):
 
 
 # Split text into manageable chunks
-text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+text_splitter = RecursiveCharacterTextSplitter(chunk_size=100, chunk_overlap=50)
 
 
 # Process loaded documents into chunks with metadata

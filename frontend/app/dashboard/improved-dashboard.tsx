@@ -19,7 +19,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { Search, Bell, Users, MessageSquare, Clock } from "lucide-react";
+import { Search, Bell, Sun, Users, MessageSquare, Clock } from "lucide-react";
 
 // Mock data for unread conversations
 const unreadConversations = [
@@ -99,7 +99,10 @@ export function ImprovedDashboard() {
     <div className="flex flex-col min-h-screen bg-gray-100">
       <header className="bg-primary text-primary-foreground shadow-md">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Customer Service Dashboard</h1>
+          <Sun className="h-8 w-8 mr-2" />
+          {""}
+          {/* Add the icon with some spacing */}
+          <h1 className="text-2xl font-bold">Ember Sands</h1>
           <div className="flex items-center space-x-4">
             <div className="relative">
               <Input
@@ -174,20 +177,22 @@ export function ImprovedDashboard() {
               </CardContent>
             </Card>
           </Link>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Open Tickets
-              </CardTitle>
-              <MessageSquare className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">42</div>
-              <p className="text-xs text-muted-foreground">
-                -12% from last week
-              </p>
-            </CardContent>
-          </Card>
+          <Link href="/conversations">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Open Tickets
+                </CardTitle>
+                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">42</div>
+                <p className="text-xs text-muted-foreground">
+                  -12% from last week
+                </p>
+              </CardContent>
+            </Card>
+          </Link>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -204,40 +209,7 @@ export function ImprovedDashboard() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Unread Conversations</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ul className="space-y-4">
-                {unreadConversations.map((conversation) => (
-                  <li key={conversation.id} className="border-b pb-4">
-                    <h3 className="font-semibold">{conversation.customer}</h3>
-                    <p className="text-sm text-gray-600">
-                      {conversation.message}
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      {new Date(conversation.timestamp).toLocaleString()}
-                    </p>
-                    <div className="mt-2 flex space-x-2">
-                      <Input
-                        type="text"
-                        placeholder="Auto-reply message"
-                        value={autoReplyMessage}
-                        onChange={(e) => setAutoReplyMessage(e.target.value)}
-                        className="flex-grow"
-                      />
-                      <Button onClick={() => handleAutoReply(conversation.id)}>
-                        Send
-                      </Button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
+        <div className="grid grid-cols-1 gap-6"></div>
       </main>
     </div>
   );

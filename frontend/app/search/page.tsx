@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../components/ui-search/button";
 import { Input } from "../components/ui-search/input";
 import {
@@ -9,65 +9,94 @@ import {
   CardHeader,
   CardTitle,
 } from "@/app/components/ui-search/card";
-import { Dumbbell, Search, User } from "lucide-react";
-
-// Mock data for conversations
-const conversations = [
-  {
-    id: 1,
-    member: "John Doe",
-    topic: "Membership Renewal",
-    content:
-      "I'd like to renew my annual membership. Can you provide details on any current promotions?",
-    date: "2023-05-15",
-  },
-  {
-    id: 2,
-    member: "Jane Smith",
-    topic: "Personal Training",
-    content:
-      "I'm interested in starting personal training sessions. What are your trainer qualifications and rates?",
-    date: "2023-05-16",
-  },
-  {
-    id: 3,
-    member: "Mike Johnson",
-    topic: "Equipment Issue",
-    content:
-      "The treadmill in the cardio section (number 5) seems to be malfunctioning. It's making a loud noise when in use.",
-    date: "2023-05-17",
-  },
-  {
-    id: 4,
-    member: "Sarah Williams",
-    topic: "Class Schedule",
-    content:
-      "I noticed the yoga class schedule has changed. Can you confirm the new timings for the advanced class?",
-    date: "2023-05-18",
-  },
-  {
-    id: 5,
-    member: "Chris Brown",
-    topic: "Locker Room",
-    content:
-      "I left my watch in locker number 42 yesterday. Has it been turned in to lost and found?",
-    date: "2023-05-19",
-  },
-];
+import { Dumbbell, Search, User, ChevronDown, ChevronUp } from "lucide-react";
 
 export default function GymConversationSearchComponent() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState(conversations);
+  const [searchResults, setSearchResults] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(
+    null
+  );
+
+  // Retrieve conversation data from session storage
+  useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        const results = sessionStorage.getItem("searchResults");
+        console.log(results);
+        if (!results) {
+          throw new Error("No search results found in session storage.");
+        }
+
+        // Parse the results from session storage and prepend "/Conversations/" to each file path
+        let filePaths = JSON.parse(results);
+        const filePathsUnique = Array.from(new Set(filePaths));
+        filePaths = filePathsUnique.map((path) => `/Conversations/${path}`);
+
+        const conversations = [];
+
+        // Fetch conversation details from each file path
+        for (const filePath of filePaths) {
+          const response = await fetch(filePath);
+          const data = await response.json();
+
+          const customer = data.parties.find(
+            (party) => party.meta.role === "customer"
+          );
+          const agent = data.parties.find(
+            (party) => party.meta.role === "agent"
+          );
+
+          if (customer && agent) {
+            conversations.push({
+              customerName: customer.name,
+              customerPhone: customer.tel,
+              customerEmail: customer.email,
+              agentName: agent.name,
+              fullConversation: data.analysis[0].body, // Assuming full conversation is here
+              date: data.created_at,
+            });
+          }
+        }
+
+        setSearchResults(conversations);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchConversations();
+  }, []);
 
   const handleSearch = () => {
-    const results = conversations.filter(
+    const filteredResults = searchResults.filter(
       (conversation) =>
-        conversation.topic.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        conversation.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        conversation.member.toLowerCase().includes(searchTerm.toLowerCase())
+        conversation.customerName
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        conversation.customerEmail
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        conversation.agentName.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    setSearchResults(results);
+    setSearchResults(filteredResults);
   };
+
+  const toggleExpand = (index: number) => {
+    setExpandedCardIndex((prevIndex) => (prevIndex === index ? null : index));
+  };
+
+  if (loading) {
+    return <p>Loading conversations...</p>;
+  }
+
+  if (error) {
+    return <p>Error loading conversations: {error}</p>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 py-12 px-4 sm:px-6 lg:px-8">
@@ -97,22 +126,52 @@ export default function GymConversationSearchComponent() {
         </div>
 
         <div className="space-y-4">
-          {searchResults.map((conversation) => (
-            <Card key={conversation.id} className="bg-gray-800 border-gray-700">
-              <CardHeader>
-                <CardTitle className="flex items-center text-green-400">
-                  <User className="h-5 w-5 mr-2" />
-                  {conversation.member}
+          {searchResults.map((conversation, index) => (
+            <Card key={index} className="bg-gray-800 border-gray-700">
+              <CardHeader
+                onClick={() => toggleExpand(index)}
+                className="cursor-pointer"
+              >
+                <CardTitle className="flex items-center justify-between text-green-400">
+                  <div className="flex items-center">
+                    <User className="h-5 w-5 mr-2" />
+                    {conversation.customerName}
+                  </div>
+                  {expandedCardIndex === index ? (
+                    <ChevronUp />
+                  ) : (
+                    <ChevronDown />
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-gray-400 mb-2">
-                  Topic: {conversation.topic}
+                  Phone: {conversation.customerPhone}
                 </p>
-                <p className="text-gray-300">{conversation.content}</p>
+                <p className="text-sm text-gray-400 mb-2">
+                  Email: {conversation.customerEmail}
+                </p>
+                <p className="text-sm text-gray-400 mb-2">
+                  Agent: {conversation.agentName}
+                </p>
                 <p className="text-xs text-gray-500 mt-2">
                   Date: {conversation.date}
                 </p>
+
+                {expandedCardIndex === index && (
+                  <div className="mt-4">
+                    <h4 className="font-bold mb-2">Conversation:</h4>
+                    <div className="text-gray-300">
+                      {conversation.fullConversation.map(
+                        (entry: any, i: number) => (
+                          <p key={i}>
+                            <strong>{entry.speaker}:</strong> {entry.message}
+                          </p>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
