@@ -167,3 +167,34 @@ def search_documents_with_llm(question: str, directory: str):
     response = llm.generate(refined_question)
 
     return response
+
+
+def generate_responses(question: str):
+    client = OpenAI(
+    api_key = openai_api_key
+    )
+    MODEL = "gpt-3.5-turbo"  
+
+
+    rules = {
+        "no smoking": "Smoking is strictly prohibited in all areas of the room and building.",
+        "cancellation policy": "No cancellations or modifications are allowed within 48 hours of your booking. Cancellations outside of this period may incur a fee.",
+        "check-in time": "Check-in starts at 3:00 PM, and check-out is by 11:00 AM. Early check-ins and late check-outs may be arranged upon request.",
+        "pet policy": "Pets are welcome with a surcharge of $50 per stay. However, restrictions apply based on the type and size of pets.",
+    }
+
+
+    try:
+        response = client.chat.completions.create(
+        model=MODEL,
+        messages=[
+            {"role": "system", "content": "If the user's question {} resembles the pre difined set of rules {} return the values in those rules otherwise You are a hepful assistant who knows all the hotel policies.".format(question,rules)},
+            {"role": "user", "content": question}
+        ],
+        max_tokens=500,
+        temperature=0.2,
+        )
+        return response.choices[0].message.content.strip()
+    except Exception as e:
+        return f"Error: {str(e)}"
+
