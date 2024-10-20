@@ -69,6 +69,10 @@ def process_vcon_data(vcon_data: Dict[str, Any], file_path: str) -> List[Documen
         "created_at": vcon_data.get("created_at", ""),
         "updated_at": vcon_data.get("updated_at", ""),
     }
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=500,  # Set the size of each chunk
+        chunk_overlap=100,  # Set the overlap between chunks
+    )
 
     # Process analysis sections for individual messages
     for analysis in vcon_data.get("analysis", []):
@@ -81,20 +85,24 @@ def process_vcon_data(vcon_data: Dict[str, Any], file_path: str) -> List[Documen
                     message = entry.get("message", "")
 
                     if message:
-                        # Attach metadata to each message
-                        message_metadata = {
-                            **base_metadata,
-                            "speaker": speaker,
-                            "speaker_role": (
-                                "agent" if speaker == "Agent" else "customer"
-                            ),
-                            "analysis_type": "transcript",
-                        }
+                        # Split the message into chunks
+                        chunks = text_splitter.split_text(message)
 
-                        # Add the message as a separate document
-                        documents.append(
-                            Document(page_content=message, metadata=message_metadata)
-                        )
+                        for chunk in chunks:
+                            # Attach metadata to each message chunk
+                            message_metadata = {
+                                **base_metadata,
+                                "speaker": speaker,
+                                "speaker_role": (
+                                    "agent" if speaker == "Agent" else "customer"
+                                ),
+                                "analysis_type": "transcript",
+                            }
+
+                            # Add each chunk as a separate document
+                            documents.append(
+                                Document(page_content=chunk, metadata=message_metadata)
+                            )
 
     return documents
 
@@ -142,6 +150,7 @@ def search_documents(question: str, directory: str) -> List[Dict[str, Any]]:
             f"../Conversations/vCon/{doc.metadata['uuid']}.vcon.json"
             for doc in relevant_docs
         ]
+        print(uuids)
         return uuids
 
         # Return simplified format with just UUID, speaker, and content
@@ -162,7 +171,7 @@ def search_documents_with_llm(question: str, directory: str):
     processed_docs = load_processed_files(directory)
     retriever = create_vectorstore(processed_docs)
 
-    llm = ChatOpenAI(model_name="gpt-3.5-turbo")
+    llm = ChatOpenAI(model_name="gpt-4", temperature=0)
 
     relevant_docs = retriever.get_relevant_documents(question, n_results=5)
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../components/ui-dashboard/button";
 import { Input } from "../components/ui-dashboard/input";
 import { useRouter } from "next/navigation";
@@ -19,7 +19,17 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
-import { Search, Bell, Sun, Users, MessageSquare, Clock } from "lucide-react";
+
+import {
+  Search,
+  Bell,
+  Sun,
+  Users,
+  MessageSquare,
+  Clock,
+  Caravan,
+  TentTree,
+} from "lucide-react";
 
 // Mock data for unread conversations
 const unreadConversations = [
@@ -60,6 +70,19 @@ export function ImprovedDashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  useEffect(() => {
+    // Clear session storage on page refresh or exit
+    const handleBeforeUnload = () => {
+      sessionStorage.clear();
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    // Cleanup the event listener on component unmount
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, []);
 
   const handleSearchSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,10 +122,15 @@ export function ImprovedDashboard() {
     <div className="flex flex-col min-h-screen bg-gray-100">
       <header className="bg-primary text-primary-foreground shadow-md">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <Sun className="h-8 w-8 mr-2" />
-          {""}
-          {/* Add the icon with some spacing */}
-          <h1 className="text-2xl font-bold">Ember Sands</h1>
+          <div>
+            <div className="inline-block">
+              <TentTree className="h-8 w-8 mr-2 " />
+            </div>
+            <div className="inline-block">
+              <h1 className="text-2xl font-bold">Ember Sands</h1>
+            </div>
+          </div>
+
           <div className="flex items-center space-x-4">
             <div className="relative">
               <Input
@@ -117,7 +145,12 @@ export function ImprovedDashboard() {
                 size={20}
               />
             </div>
-            <Button onClick={handleSearchSubmit}>Search</Button>
+            <Button
+              className="bg-black-500 hover:bg-white hover:text-black font-bold py-2 px-4 rounded border border-white"
+              onClick={handleSearchSubmit}
+            >
+              Search
+            </Button>
             <Bell className="text-primary-foreground" size={24} />
           </div>
         </div>

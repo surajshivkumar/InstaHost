@@ -65,6 +65,7 @@ export default function GymConversationSearchComponent() {
       } catch (err) {
         setError(err.message);
       } finally {
+        sessionStorage.removeItem("searchResults");
         setLoading(false);
       }
     };
@@ -99,12 +100,12 @@ export default function GymConversationSearchComponent() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-200 text-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-center mb-8">
-          <Dumbbell className="h-12 w-12 text-green-500 mr-2" />
+          <Search className="h-12 w-12 text-green-500 mr-2" />
           <h1 className="text-3xl font-bold text-center">
-            Gym Conversation Search
+            Conversation Search
           </h1>
         </div>
 
@@ -114,7 +115,7 @@ export default function GymConversationSearchComponent() {
             placeholder="Search conversations..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-grow bg-gray-800 border-gray-700 text-white"
+            className="flex-grow bg-gray-200 border-gray-700 text-gray-900"
           />
           <Button
             onClick={handleSearch}
@@ -127,7 +128,7 @@ export default function GymConversationSearchComponent() {
 
         <div className="space-y-4">
           {searchResults.map((conversation, index) => (
-            <Card key={index} className="bg-gray-800 border-gray-700">
+            <Card key={index} className="bg-gray-800 border-green-700">
               <CardHeader
                 onClick={() => toggleExpand(index)}
                 className="cursor-pointer"
@@ -160,7 +161,9 @@ export default function GymConversationSearchComponent() {
 
                 {expandedCardIndex === index && (
                   <div className="mt-4">
-                    <h4 className="font-bold mb-2">Conversation:</h4>
+                    <h4 className="font-bold mb-2 text-gray-50">
+                      Conversation:
+                    </h4>
                     <div className="text-gray-300">
                       {conversation.fullConversation.map(
                         (entry: any, i: number) => (
