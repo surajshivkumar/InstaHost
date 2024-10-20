@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -15,95 +15,53 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "../components/ui-conversationsPage/accordion";
-import {
-  MessageSquare,
-  User,
-  Bot,
-  RefreshCw,
-  BellRing,
-  Home,
-  Utensils,
-  HelpCircle,
-} from "lucide-react";
-
-// Mock data for unread conversations grouped by segments
-const unreadConversationsBySegment = {
-  Accommodation: [
-    {
-      id: 1,
-      guest: "John Doe",
-      subject: "Check-in Time",
-      lastMessage:
-        "Hi, I was wondering if it's possible to check in earlier than the listed time?",
-      timestamp: "2023-06-15T22:30:00Z",
-    },
-    {
-      id: 2,
-      guest: "Emily Brown",
-      subject: "Parking Availability",
-      lastMessage: "Is there on-site parking available for guests?",
-      timestamp: "2023-06-15T21:45:00Z",
-    },
-  ],
-  Amenities: [
-    {
-      id: 3,
-      guest: "Mike Johnson",
-      subject: "Wi-Fi Password",
-      lastMessage:
-        "Could you please provide the Wi-Fi password for the apartment?",
-      timestamp: "2023-06-15T18:20:00Z",
-    },
-  ],
-  "Local Tips": [
-    {
-      id: 4,
-      guest: "Sarah Smith",
-      subject: "Restaurant Recommendation",
-      lastMessage: "Can you recommend a good local restaurant for dinner?",
-      timestamp: "2023-06-15T19:10:00Z",
-    },
-    {
-      id: 5,
-      guest: "David Lee",
-      subject: "Public Transportation",
-      lastMessage:
-        "What's the best way to get to the city center using public transportation?",
-      timestamp: "2023-06-15T20:05:00Z",
-    },
-  ],
-};
-
-// Simulated API call for generating auto-response
-const generateAutoResponse = async (message: string) => {
-  // In a real application, this would be an API call to your LLM service
-  await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API delay
-  return `Thank you for your message. We've received your inquiry about "${message.substring(
-    0,
-    30
-  )}...". We'll get back to you as soon as possible with more information. If you need immediate assistance, please don't hesitate to use the Airbnb messaging system. We hope you're enjoying your stay!`;
-};
+import { User, Bot, RefreshCw, BellRing } from "lucide-react";
 
 export default function Page() {
-  const [expandedConversation, setExpandedConversation] = useState<
-    number | null
-  >(null);
+  const [conversations, setConversations] = useState([]);
+  const [groupedConversations, setGroupedConversations] = useState({});
   const [autoResponses, setAutoResponses] = useState<{ [key: number]: string }>(
     {}
   );
   const [isGenerating, setIsGenerating] = useState<{ [key: number]: boolean }>(
     {}
   );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  //   const handleGenerateResponse = async (
-  //     conversationId: number,
-  //     message: string
-  //   ) => {
-  //     setIsGenerating((prev) => ({ ...prev, [conversationId]: true }));
-  //     const response = await generateAutoResponse(message);
-  //     setAutoResponses((prev) => ({ ...prev, [conversationId]: response }));
-  //     setIsGenerating((prev) => ({ ...prev, [conversationId]: false }));
-  //   };
+  // Fetch conversations from backend
+  useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/conversations");
+        if (!response.ok) {
+          throw new Error(
+            `Error fetching conversations: ${response.statusText}`
+          );
+        }
+        const data = await response.json(); // Assuming backend returns an array of conversations
+
+        // Group conversations by subject
+        const grouped = data.reduce((acc, conversation) => {
+          const subject = conversation.subject;
+          if (!acc[subject]) {
+            acc[subject] = [];
+          }
+          acc[subject].push(conversation);
+          return acc;
+        }, {});
+
+        setConversations(data);
+        setGroupedConversations(grouped); // Save grouped conversations
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchConversations();
+  }, []);
 
   const handleGenerateResponse = async (conversationId, lastMessage) => {
     // Set the loading state for the specific conversation
@@ -124,7 +82,6 @@ export default function Page() {
       }
 
       const data = await response.json();
-      console.log(data);
 
       // Store the response in the autoResponses state
       setAutoResponses((prev) => ({
@@ -139,21 +96,13 @@ export default function Page() {
     }
   };
 
-  const getCategoryIcon = (category: string) => {
-    switch (category) {
-      case "Accommodation":
-        return <Home className="h-6 w-6" />;
-      case "Amenities":
-        return <Utensils className="h-6 w-6" />;
-      case "Local Tips":
-        return <HelpCircle className="h-6 w-6" />;
-      default:
-        return <MessageSquare className="h-6 w-6" />;
-    }
-  };
+  if (loading) {
+    return <p>Loading conversations...</p>;
+  }
 
-  const totalUnreadCount = Object.values(unreadConversationsBySegment).flat()
-    .length;
+  if (error) {
+    return <p>Error loading conversations: {error}</p>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 py-12 px-4 sm:px-6 lg:px-8">
@@ -162,24 +111,24 @@ export default function Page() {
           Host Dashboard
         </h1>
 
+        {/* Render cards showing how many conversations in each category */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          {Object.entries(unreadConversationsBySegment).map(
-            ([segment, conversations]) => (
+          {Object.entries(groupedConversations).map(
+            ([subject, conversations]) => (
               <Card
-                key={segment}
+                key={subject}
                 className="bg-white shadow-sm hover:shadow-md transition-shadow duration-300 border-none"
               >
                 <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                   <CardTitle className="text-sm font-medium">
-                    {segment}
+                    {subject}
                   </CardTitle>
-                  {getCategoryIcon(segment)}
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
                     {conversations.length}
                   </div>
-                  <p className="text-xs text-gray-500">Unread messages</p>
+                  <p className="text-xs text-gray-500">Conversations</p>
                 </CardContent>
               </Card>
             )
@@ -187,96 +136,72 @@ export default function Page() {
           <Card className="bg-[#FF5A5F] text-white shadow-sm hover:shadow-md transition-shadow duration-300 border-none">
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-sm font-medium">
-                Total Unread
+                Total Conversations
               </CardTitle>
               <BellRing className="h-6 w-6" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalUnreadCount}</div>
+              <div className="text-2xl font-bold">{conversations.length}</div>
               <p className="text-xs text-white/80">Across all categories</p>
             </CardContent>
           </Card>
         </div>
 
+        {/* Render grouped conversations */}
         <div className="space-y-6">
-          {Object.entries(unreadConversationsBySegment).map(
-            ([segment, conversations]) => (
-              <Card key={segment} className="bg-white shadow-sm border-none">
-                <CardHeader>
-                  <CardTitle className="text-xl font-semibold flex items-center">
-                    {getCategoryIcon(segment)}
-                    <span className="ml-2">{segment}</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Accordion type="single" collapsible className="w-full">
-                    {conversations.map((conversation) => (
-                      <AccordionItem
-                        key={conversation.id}
-                        value={`item-${conversation.id}`}
-                      >
-                        <AccordionTrigger className="hover:no-underline">
-                          <div className="flex items-center justify-between w-full">
-                            <span className="text-sm font-medium">
-                              {conversation.subject}
-                            </span>
-                            <Badge
-                              variant="secondary"
-                              className="ml-2 bg-[#FFB400] text-white"
-                            >
-                              Unread
-                            </Badge>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="space-y-4">
-                            <div>
-                              <p className="text-sm text-gray-600">
-                                From: {conversation.guest}
-                              </p>
-                              <p className="text-sm text-gray-600">
-                                Received:{" "}
-                                {new Date(
-                                  conversation.timestamp
-                                ).toLocaleString()}
-                              </p>
+          {Object.entries(groupedConversations).map(
+            ([subject, conversations]) => (
+              <div key={subject}>
+                <h2 className="text-2xl font-bold mb-4">{subject}</h2>
+
+                {conversations.map((conversation) => (
+                  <Card
+                    key={conversation.id}
+                    className="bg-white shadow-sm border-none"
+                  >
+                    <CardHeader>
+                      <CardTitle className="text-xl font-semibold">
+                        {`ROOM ${Math.floor(100 + Math.random() * 900)}`}{" "}
+                        {/* Generates a random 3-digit room number */}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <Accordion type="single" collapsible className="w-full">
+                        <AccordionItem value={`item-${conversation.id}`}>
+                          <AccordionTrigger className="hover:no-underline">
+                            <div className="flex items-center justify-between w-full">
+                              <span className="text-sm font-medium">
+                                {conversation.guest}
+                              </span>
+                              <Badge
+                                variant="secondary"
+                                className="ml-2 bg-[#FFB400] text-white"
+                              >
+                                Unread
+                              </Badge>
                             </div>
-                            <div className="bg-gray-50 p-4 rounded-md">
-                              <div className="flex items-start">
-                                <User className="h-5 w-5 mr-2 mt-1 text-gray-500" />
-                                <p className="text-sm">
-                                  {conversation.lastMessage}
-                                </p>
-                              </div>
-                            </div>
-                            {autoResponses[conversation.id] && (
-                              <div className="bg-[#00A699]/10 p-4 rounded-md">
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="space-y-4">
+                              <div className="bg-gray-50 p-4 rounded-md">
                                 <div className="flex items-start">
-                                  <Bot className="h-5 w-5 mr-2 mt-1 text-[#00A699]" />
+                                  <User className="h-5 w-5 mr-2 mt-1 text-gray-500" />
                                   <p className="text-sm">
-                                    {autoResponses[conversation.id]}
+                                    {conversation.lastMessage}
                                   </p>
                                 </div>
                               </div>
-                            )}
-                            <div className="flex space-x-2">
-                              <Button
-                                onClick={() =>
-                                  handleGenerateResponse(
-                                    conversation.id,
-                                    conversation.lastMessage
-                                  )
-                                }
-                                className="flex-1 bg-[#FF5A5F] hover:bg-[#FF5A5F]/90 text-white"
-                                disabled={isGenerating[conversation.id]}
-                              >
-                                {isGenerating[conversation.id]
-                                  ? "Generating..."
-                                  : autoResponses[conversation.id]
-                                  ? "Regenerate Response"
-                                  : "Generate Response"}
-                              </Button>
                               {autoResponses[conversation.id] && (
+                                <div className="bg-[#00A699]/10 p-4 rounded-md">
+                                  <div className="flex items-start">
+                                    <Bot className="h-5 w-5 mr-2 mt-1 text-[#00A699]" />
+                                    <p className="text-sm">
+                                      {autoResponses[conversation.id]}
+                                    </p>
+                                  </div>
+                                </div>
+                              )}
+                              <div className="flex space-x-2">
                                 <Button
                                   onClick={() =>
                                     handleGenerateResponse(
@@ -284,20 +209,38 @@ export default function Page() {
                                       conversation.lastMessage
                                     )
                                   }
-                                  className="bg-gray-200 hover:bg-gray-300 text-gray-800"
+                                  className="flex-1 bg-[#FF5A5F] hover:bg-[#FF5A5F]/90 text-white"
                                   disabled={isGenerating[conversation.id]}
                                 >
-                                  <RefreshCw className="h-4 w-4" />
+                                  {isGenerating[conversation.id]
+                                    ? "Generating..."
+                                    : autoResponses[conversation.id]
+                                    ? "Regenerate Response"
+                                    : "Generate Response"}
                                 </Button>
-                              )}
+                                {autoResponses[conversation.id] && (
+                                  <Button
+                                    onClick={() =>
+                                      handleGenerateResponse(
+                                        conversation.id,
+                                        conversation.lastMessage
+                                      )
+                                    }
+                                    className="bg-gray-200 hover:bg-gray-300 text-gray-800"
+                                    disabled={isGenerating[conversation.id]}
+                                  >
+                                    <RefreshCw className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                </CardContent>
-              </Card>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             )
           )}
         </div>
