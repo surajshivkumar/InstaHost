@@ -12,7 +12,7 @@
 
 ## How It Works
 
-1. **User Submits Complaint**: Users can easily submit their complaints using the platform, specifying the issue they faced (e.g., cleanliness, service quality, food, etc.).
+1. **User Submits Complaint**: Users can easily submit their complaints using the platform, specifying the issue they faced in various categories.
    
 2. **AI-Generated Response**: Based on a knowledge base, AI analyzes the complaint and generates a meaningful response that aligns with the complaint and the context.
    
