@@ -30,8 +30,8 @@ def load_processed_files(directory: str) -> List[Document]:
         raise ValueError(f"Directory does not exist: {directory}")
 
     documents = []
-    files = [f for f in os.listdir(directory) if f.endswith(".vcon.json")]
-
+    files = [f for f in os.listdir(directory) if f.endswith(".json")]
+    # print(files)
     print(f"Found {len(files)} VCon JSON files in directory")
 
     for filename in files:
@@ -72,7 +72,10 @@ def process_vcon_data(vcon_data: Dict[str, Any], file_path: str) -> List[Documen
         "created_at": vcon_data.get("created_at", ""),
         "updated_at": vcon_data.get("updated_at", ""),
     }
-
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=1000,  # Set the size of each chunk
+        chunk_overlap=100,  # Set the overlap between chunks
+    )
     # Process analysis sections for individual messages
     for analysis in vcon_data.get("analysis", []):
         if analysis.get("type") == "transcript":
@@ -84,20 +87,24 @@ def process_vcon_data(vcon_data: Dict[str, Any], file_path: str) -> List[Documen
                     message = entry.get("message", "")
 
                     if message:
-                        # Attach metadata to each message
-                        message_metadata = {
-                            **base_metadata,
-                            "speaker": speaker,
-                            "speaker_role": (
-                                "agent" if speaker == "Agent" else "customer"
-                            ),
-                            "analysis_type": "transcript",
-                        }
+                        # Split the message into chunks
+                        chunks = text_splitter.split_text(message)
 
-                        # Add the message as a separate document
-                        documents.append(
-                            Document(page_content=message, metadata=message_metadata)
-                        )
+                        for chunk in chunks:
+                            # Attach metadata to each message chunk
+                            message_metadata = {
+                                **base_metadata,
+                                "speaker": speaker,
+                                "speaker_role": (
+                                    "agent" if speaker == "Agent" else "customer"
+                                ),
+                                "analysis_type": "transcript",
+                            }
+
+                            # Add each chunk as a separate document
+                            documents.append(
+                                Document(page_content=chunk, metadata=message_metadata)
+                            )
 
     return documents
 
@@ -126,6 +133,50 @@ def create_vectorstore(documents: List[Document]):
         raise
 
 
+from typing import List, Dict, Any
+
+
+def process_json_file(file_path: str) -> Dict[str, Any]:
+    """Process a single JSON file to extract conversation details."""
+    try:
+        # Open and load the JSON file
+        with open(file_path, "r", encoding="utf-8") as file:
+            data = json.load(file)
+
+        # Extract parties
+        customer = next(
+            (party for party in data["parties"] if party["meta"]["role"] == "customer"),
+            None,
+        )
+        agent = next(
+            (party for party in data["parties"] if party["meta"]["role"] == "agent"),
+            None,
+        )
+
+        if customer and agent:
+            # Extract the full conversation from analysis
+            full_conversation = (
+                data["analysis"][0]["body"]
+                if "analysis" in data and data["analysis"]
+                else None
+            )
+
+            # Return extracted information
+            return {
+                "customerName": customer.get("name", "Unknown"),
+                "customerPhone": customer.get("tel", "Unknown"),
+                "customerEmail": customer.get("email", "Unknown"),
+                "agentName": agent.get("name", "Unknown"),
+                "fullConversation": full_conversation,
+                "date": data.get("created_at", "Unknown"),
+            }
+        else:
+            return {"error": "Customer or agent not found in the file"}
+
+    except Exception as e:
+        return {"error": f"Error processing {file_path}: {str(e)}"}
+
+
 def search_documents(question: str, directory: str) -> List[Dict[str, Any]]:
     """
     Searches for relevant messages and returns metadata and the first line of the message.
@@ -141,11 +192,18 @@ def search_documents(question: str, directory: str) -> List[Dict[str, Any]]:
     try:
         retriever = create_vectorstore(processed_docs)
         relevant_docs = retriever.get_relevant_documents(question, n_results=5)
-        uuids = [
-            f"../Conversations/vCon/{doc.metadata['uuid']}.vcon.json"
-            for doc in relevant_docs
-        ]
-        return uuids
+        uuids = list(
+            set(
+                [
+                    f"../Conversations/vCon/{doc.metadata['uuid']}.json"
+                    for doc in relevant_docs
+                ]
+            )
+        )
+        docs = []
+        for file in uuids:
+            docs.append(process_json_file(file))
+        return docs
 
         # Return simplified format with just UUID, speaker, and content
         # return [
@@ -293,7 +351,7 @@ category_keywords = {
         "hospitality",
     },
     "Cleanliness": {"clean", "dirty", "dust", "stain", "hygiene", "smell", "odor"},
-    "Food - Amenities": {
+    "Food and Amenities": {
         "amenity",
         "facility",
         "wifi",
@@ -324,7 +382,7 @@ def categorize_complaints(problem_list):
             "hospitality",
         },
         "Cleanliness": {"clean", "dirty", "dust", "stain", "hygiene", "smell", "odor"},
-        "Food - Amenities": {
+        "Food and Amenities": {
             "amenity",
             "facility",
             "wifi",
@@ -528,14 +586,15 @@ def segmentCall(problem):
         catKey = "\n".join(
             [f"- {key}: {value}" for key, value in category_keywords.items()]
         )
-        print(problem)
+        # print(problem)
         messages = [
             SystemMessage(
                 content=(
                     "You are a helpful category assigner. Use these categories as your knowledge base: "
                     f"{catKey}. If the  problems  '{problem}' in the call records matches any category, provide "
                     "the corresponding information"
-                    "please return a response in the follwoing way : ["
+                    "please return the category assigned within a string inside a []: ["
+                    "problem_name"
                     "]"
                 )
             ),
@@ -543,14 +602,169 @@ def segmentCall(problem):
         ]
 
         response = llm(messages)
-
         return response.content
 
     except Exception as e:
         return f"Error: {str(e)}"
 
 
-# directory_path="Vcon"
-# problems_list = gather_problems(directory_path)
-# category_keywords = categorize_complaints()
-# categorized_result, renamed_files = categorize_and_rename_in_directory(problems_list, directory_path, category_keywords)
+from datetime import datetime
+import uuid
+
+
+def generate_vcon_json(
+    customer_name, customer_email, customer_phone, problem_description, problem_segment
+):
+
+    conversation_id = str(uuid.uuid4())
+    timestamp = datetime.utcnow().isoformat()
+
+    # Agent's static info
+    agent_name = "Nathan Henderson"
+    agent_email = "nathan.henderson@hotel.com"
+    agent_phone = "+16125825148"
+
+    # Construct the conversation with the dynamic problem description
+    conversation = [
+        {
+            "speaker": "Agent",
+            "message": f"Hello, thank you for contacting Hotel Express customer support. My name is {agent_name}. May I please have your name?",
+        },
+        {"speaker": "Customer", "message": f"Hello, my name is {customer_name}."},
+        {
+            "speaker": "Agent",
+            "message": f"Thank you, {customer_name}. Can you please provide me with the first three digits of your phone number?",
+        },
+        {"speaker": "Customer", "message": f"Sure, it is {customer_phone[:3]}."},
+        {
+            "speaker": "Agent",
+            "message": f"Great, thank you. Now, could you share with me the last two digits of your zip code?",
+        },
+        {"speaker": "Customer", "message": "Of course, they are 98."},
+        {
+            "speaker": "Agent",
+            "message": f"Thank you for providing that information, {customer_name}. Now, please let me know how I can assist you today.",
+        },
+        {
+            "speaker": "Customer",
+            "message": f"I’m calling because {problem_description}.",
+        },
+        {
+            "speaker": "Agent",
+            "message": f"I’m sorry to hear that, {customer_name}. I will ensure that our team addresses the issue regarding {problem_description} as soon as possible.",
+        },
+        {"speaker": "Customer", "message": "Thank you for your help."},
+        {
+            "speaker": "Agent",
+            "message": "You're welcome. Thank you for reaching out to us. Have a wonderful day.",
+        },
+        {"speaker": "Agent", "message": "End of conversation."},
+    ]
+
+    # JSON structure for the VCon file
+    vcon_data = {
+        "uuid": conversation_id,
+        "created_at": timestamp,
+        "updated_at": timestamp,
+        "dialog": [
+            {
+                "alg": "SHA-512",
+                "url": f"https://fake-vcons.s3.amazonaws.com/{conversation_id}.mp3",
+                "meta": {"direction": "in", "disposition": "ANSWERED"},
+                "type": "recording",
+                "start": timestamp,
+                "parties": [1, 0],
+                "duration": 36.456,
+                "filename": f"{conversation_id}.mp3",
+                "mimetype": "audio/mp3",
+                "signature": "fake-signature",
+            }
+        ],
+        "parties": [
+            {
+                "tel": agent_phone,
+                "meta": {"role": "agent"},
+                "name": agent_name,
+                "mailto": agent_email,
+            },
+            {
+                "tel": customer_phone,
+                "meta": {"role": "customer"},
+                "name": customer_name,
+                "email": customer_email,
+            },
+        ],
+        "attachments": [
+            {
+                "type": "generation_info",
+                "encoding": "none",
+                "body": {
+                    "agent_name": agent_name,
+                    "customer_name": customer_name,
+                    "business": "Hotel",
+                    "problem": problem_description,
+                    "prompt": "\nGenerate a fake conversation between a customer and an agent.\nThe agent should introduce themselves, their company and give the customer their name. The agent should ask for the customer's name.\nAs part of the conversation, have the agent ask for two pieces of personal information.  Spell out numbers. For example, 1000 should be said as one zero zero zero, not one thousand. The conversation should be at least 10 lines long and be complete. At the end of the conversation, the agent should thank the customer for their time and end the conversation.",
+                    "created_on": timestamp,
+                    "model": "gpt-3.5-turbo",
+                },
+            }
+        ],
+        "analysis": [
+            {
+                "type": "transcript",
+                "dialog": 0,
+                "vendor": "openai",
+                "encoding": "none",
+                "segment": problem_segment,
+                "body": conversation,
+                "vendor_schema": {
+                    "model": "gpt-3.5-turbo",
+                    "prompt": "Generate a fake conversation between a customer and an agent.",
+                },
+            }
+        ],
+    }
+
+    # Save the JSON to a file
+    print("Writing", conversation_id)
+    with open(f"../Conversations/vCon/{conversation_id}.json", "w") as json_file:
+        json.dump(vcon_data, json_file, indent=4)
+
+    return vcon_data
+
+
+from typing import List
+from app.models import Conversation
+
+
+def processConversationBySegment(directory_path: str) -> List[Conversation]:
+    conversations = []
+
+    # Ensure the directory exists
+    if not os.path.exists(directory_path):
+        raise FileNotFoundError(f"Directory not found: {directory_path}")
+
+    # Read each JSON file in the directory
+    for filename in os.listdir(directory_path):
+        if filename.endswith(".json"):
+            file_path = os.path.join(directory_path, filename)
+
+            # Open and read the JSON file
+            with open(file_path, "r", encoding="utf-8") as file:
+                try:
+                    data = json.load(file)
+                    # Process and create a Conversation object
+                    conversation = Conversation(
+                        id=data["id"],
+                        guest=data["guest"],
+                        subject=data["subject"],
+                        lastMessage=data["lastMessage"],
+                        timestamp=data["timestamp"],
+                    )
+                    conversations.append(conversation)
+                except json.JSONDecodeError as e:
+                    print(f"Error decoding JSON in file {filename}: {e}")
+                except KeyError as e:
+                    print(f"Missing key {e} in file {filename}")
+
+    return conversations
