@@ -243,18 +243,15 @@ def generate_responses_sync(question: str) -> Optional[str]:
     return asyncio.run(generate_responses(question))
 
 
-
-
-
 def gather_problems(folder_path):
-    
+
     problems_list = []
     # Iterate through each file in the folder
     for filename in os.listdir(folder_path):
-        if filename.endswith('.json'):  
+        if filename.endswith(".json"):
             file_path = os.path.join(folder_path, filename)
             # Open and load the JSON file
-            with open(file_path, 'r') as file:
+            with open(file_path, "r") as file:
                 data = json.load(file)
                 # Check if the "attachments" field exists and contains the problem
                 if "attachments" in data and len(data["attachments"]) > 0:
@@ -263,58 +260,186 @@ def gather_problems(folder_path):
     return problems_list
 
 
-
-
 def add_variations(word_set):
-    
+
     categories = {
-    "Service Quality": [],
-    "Cleanliness": [],
-    "Food and Amenities": [],
-    "Noise and Privacy": [],
-    "Check-in and Check-out": [],
-    "Price": [],
-    "Other": []
+        "Service Quality": [],
+        "Cleanliness": [],
+        "Food and Amenities": [],
+        "Noise and Privacy": [],
+        "Check-in and Check-out": [],
+        "Price": [],
+        "Other": [],
     }
-   
+
     variations = set()
     for word in word_set:
         variations.add(word)
-        variations.add(word + "s")  
-        variations.add(word + "ed") 
-        variations.add(word + "ing")  
+        variations.add(word + "s")
+        variations.add(word + "ed")
+        variations.add(word + "ing")
     return variations
 
 
-
-
-def categorize_complaints(problem_list):
-    
-    category_keywords = {
-    "Service Quality": {"service", "staff", "rude", "helpful", "attentive", "friendly", "unfriendly", "hospitality"},
+category_keywords = {
+    "Service Quality": {
+        "service",
+        "staff",
+        "rude",
+        "helpful",
+        "attentive",
+        "friendly",
+        "unfriendly",
+        "hospitality",
+    },
     "Cleanliness": {"clean", "dirty", "dust", "stain", "hygiene", "smell", "odor"},
-    "Food - Amenities": {"amenity", "facility", "wifi", "internet", "shower", "bed", "food", "breakfast", "meal"},
+    "Food - Amenities": {
+        "amenity",
+        "facility",
+        "wifi",
+        "internet",
+        "shower",
+        "bed",
+        "food",
+        "breakfast",
+        "meal",
+    },
     "Noise and Privacy": {"noise", "quiet", "privacy", "disturb", "loud"},
     "Check-in and Check-out": {"check", "reception", "lobby", "wait", "key", "process"},
     "Price": {"price", "expensive", "cheap", "value", "cost", "charge", "fee", "rate"},
 }
+
+
+def categorize_complaints(problem_list):
+
+    category_keywords = {
+        "Service Quality": {
+            "service",
+            "staff",
+            "rude",
+            "helpful",
+            "attentive",
+            "friendly",
+            "unfriendly",
+            "hospitality",
+        },
+        "Cleanliness": {"clean", "dirty", "dust", "stain", "hygiene", "smell", "odor"},
+        "Food - Amenities": {
+            "amenity",
+            "facility",
+            "wifi",
+            "internet",
+            "shower",
+            "bed",
+            "food",
+            "breakfast",
+            "meal",
+        },
+        "Noise and Privacy": {"noise", "quiet", "privacy", "disturb", "loud"},
+        "Check-in and Check-out": {
+            "check",
+            "reception",
+            "lobby",
+            "wait",
+            "key",
+            "process",
+        },
+        "Price": {
+            "price",
+            "expensive",
+            "cheap",
+            "value",
+            "cost",
+            "charge",
+            "fee",
+            "rate",
+        },
+    }
     synonyms = {
-        "service": ["assistance", "help", "support", "care", "attention", "hospitality"],
-        "dirty": ["filthy", "unclean", "messy", "grimy", "soiled", "unhygienic", "smelly", "odor"],
-        "noise": ["racket", "commotion", "disturbance", "clamor", "din", "loud", "noisy"],
-        "expensive": ["costly", "pricey", "overpriced", "exorbitant", "extravagant", "high"],
-        "staff": ["employee", "worker", "personnel", "attendant", "assistant", "receptionist"],
+        "service": [
+            "assistance",
+            "help",
+            "support",
+            "care",
+            "attention",
+            "hospitality",
+        ],
+        "dirty": [
+            "filthy",
+            "unclean",
+            "messy",
+            "grimy",
+            "soiled",
+            "unhygienic",
+            "smelly",
+            "odor",
+        ],
+        "noise": [
+            "racket",
+            "commotion",
+            "disturbance",
+            "clamor",
+            "din",
+            "loud",
+            "noisy",
+        ],
+        "expensive": [
+            "costly",
+            "pricey",
+            "overpriced",
+            "exorbitant",
+            "extravagant",
+            "high",
+        ],
+        "staff": [
+            "employee",
+            "worker",
+            "personnel",
+            "attendant",
+            "assistant",
+            "receptionist",
+        ],
         "bed": ["mattress", "cot", "bunk", "berth", "sleeper", "pillow", "blanket"],
         "shower": ["bath", "washroom", "bathroom", "lavatory", "tub", "toilet", "sink"],
         "internet": ["wifi", "wi-fi", "connection", "network", "broadband", "online"],
         "clean": ["spotless", "immaculate", "pristine", "sanitary", "tidy", "hygienic"],
-        "rude": ["impolite", "discourteous", "disrespectful", "uncivil", "ill-mannered", "unfriendly"],
-        "helpful": ["supportive", "accommodating", "cooperative", "obliging", "considerate", "friendly"],
+        "rude": [
+            "impolite",
+            "discourteous",
+            "disrespectful",
+            "uncivil",
+            "ill-mannered",
+            "unfriendly",
+        ],
+        "helpful": [
+            "supportive",
+            "accommodating",
+            "cooperative",
+            "obliging",
+            "considerate",
+            "friendly",
+        ],
         "quiet": ["silent", "peaceful", "tranquil", "serene", "hushed", "calm"],
-        "privacy": ["seclusion", "solitude", "isolation", "confidentiality", "discretion", "personal space"],
+        "privacy": [
+            "seclusion",
+            "solitude",
+            "isolation",
+            "confidentiality",
+            "discretion",
+            "personal space",
+        ],
         "check": ["verify", "inspect", "examine", "review", "assess", "process"],
         "wait": ["delay", "pause", "hold", "linger", "tarry", "queue"],
-        "price": ["cost", "charge", "fee", "rate", "fare", "pricing", "expensive", "cheap"],
+        "price": [
+            "cost",
+            "charge",
+            "fee",
+            "rate",
+            "fare",
+            "pricing",
+            "expensive",
+            "cheap",
+        ],
         "food": ["meal", "breakfast", "lunch", "dinner", "cuisine", "dish", "menu"],
         "smell": ["odor", "scent", "aroma", "stench", "fragrance"],
         "quality": ["standard", "grade", "caliber", "condition", "value"],
@@ -330,15 +455,17 @@ def categorize_complaints(problem_list):
     return category_keywords
 
 
-def categorize_and_rename_in_directory(problems_list, directory,category_keywords):
+def categorize_and_rename_in_directory(problems_list, directory, category_keywords):
     categorized_complaints = defaultdict(list)
     file_category_map = defaultdict(list)  # Track which files belong to which category
 
     # Get all files in the directory
     files = os.listdir(directory)
-    
+
     if len(problems_list) != len(files):
-        raise ValueError("The number of problems does not match the number of files in the directory.")
+        raise ValueError(
+            "The number of problems does not match the number of files in the directory."
+        )
 
     # Process each problem and corresponding file
     for problem, file in zip(problems_list, files):
@@ -352,7 +479,7 @@ def categorize_and_rename_in_directory(problems_list, directory,category_keyword
                 file_category_map[category].append(file)
                 matched = True
                 break
-        
+
         # If no match, classify under "Other"
         if not matched:
             categorized_complaints["Other"].append(problem)
@@ -369,51 +496,61 @@ def categorize_and_rename_in_directory(problems_list, directory,category_keyword
         unique_files = set(files)  # Avoid renaming the same file multiple times
         for original_file in unique_files:
             rename_count[category] += 1
-            new_filename = f"{category.lower().replace(' ', '_')}{rename_count[category]}.json"
-            
+            new_filename = (
+                f"{category.lower().replace(' ', '_')}{rename_count[category]}.json"
+            )
+
             # Construct full paths
             original_file_path = os.path.join(directory, original_file)
             new_file_path = os.path.join(directory, new_filename)
-            
+
             try:
                 if os.path.exists(original_file_path):
                     os.rename(original_file_path, new_file_path)
                     renamed_files[original_file] = new_filename
                 else:
-                    renamed_files[original_file] = "File not found"  # Handle missing files
+                    renamed_files[original_file] = (
+                        "File not found"  # Handle missing files
+                    )
             except:
                 continue
 
     return categorized_complaints, renamed_files
 
-def incoming_call_records(directory_path):
+
+def segmentCall(problem):
     try:
+
         # Initialize LLM with langchain_openai
         llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
 
-        problem_list=gather_problems(directory_path)
-
+        # problem_list=gather_problems(directory_path)
+        catKey = "\n".join(
+            [f"- {key}: {value}" for key, value in category_keywords.items()]
+        )
+        print(problem)
         messages = [
             SystemMessage(
                 content=(
                     "You are a helpful category assigner. Use these categories as your knowledge base: "
-                    f"{category_keywords}. If the  problems  '{problem_list}' in the call records matches any category, provide "
+                    f"{catKey}. If the  problems  '{problem}' in the call records matches any category, provide "
                     "the corresponding information"
+                    "please return a response in the follwoing way : ["
+                    "]"
                 )
             ),
-            HumanMessage(content=question),
+            HumanMessage(content=problem),
         ]
 
-        
+        response = llm(messages)
+
+        return response.content
 
     except Exception as e:
         return f"Error: {str(e)}"
 
-directory_path="Vcon"
-problems_list = gather_problems(directory_path)  
-category_keywords = categorize_complaints()  
-categorized_result, renamed_files = categorize_and_rename_in_directory(problems_list, directory_path, category_keywords)
 
-
-
-
+# directory_path="Vcon"
+# problems_list = gather_problems(directory_path)
+# category_keywords = categorize_complaints()
+# categorized_result, renamed_files = categorize_and_rename_in_directory(problems_list, directory_path, category_keywords)

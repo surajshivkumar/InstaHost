@@ -1,6 +1,11 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
-from .services import search_documents, search_documents_with_llm, generate_responses
+from .services import (
+    search_documents,
+    search_documents_with_llm,
+    generate_responses,
+    segmentCall,
+)
 from .models import ChatRequest, customerQuestion
 import os
 
@@ -40,6 +45,23 @@ async def csrBot(request: customerQuestion):
 
         # Convert the response to a dictionary
         response_content = {"documents": res}
+
+        return JSONResponse(content=response_content)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/segment")
+async def csrBot(request: customerQuestion):
+    """Handles search interaction via POST request."""
+    try:
+        lastMessage = request.lastMessage
+        # Make sure to await the asynchronous function
+        res = segmentCall(lastMessage)
+
+        # Convert the response to a dictionary
+        response_content = {"Segments": res}
 
         return JSONResponse(content=response_content)
 
