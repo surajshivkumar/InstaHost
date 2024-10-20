@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/app/components/ui-customers/card";
 import { Button } from "@/app/components/ui-customers/button";
 import { Input } from "../components/ui-customers/input";
 import { Badge } from "@/app/components/ui-customers/badge";
-import { User, Search, Plus } from "lucide-react";
+import { User, Search, Plus, BookOpen } from "lucide-react";
 
 // Mock data for customers
 const customers = [
@@ -64,7 +64,7 @@ export default function Page() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-900 text-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-100 text-black py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         <h1 className="text-3xl font-bold mb-8 text-center">Customer List</h1>
 
@@ -75,7 +75,7 @@ export default function Page() {
               placeholder="Search customers..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-64 bg-gray-800 border-gray-700 text-white"
+              className="w-64 bg-gray-200 border-gray-700 text-black"
             />
             <Button className="bg-green-600 hover:bg-green-700">
               <Search className="h-4 w-4 mr-2" />
@@ -90,10 +90,10 @@ export default function Page() {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
           {filteredCustomers.map((customer) => (
-            <Card key={customer.id} className="bg-gray-800 border-gray-700">
+            <Card key={customer.id} className="bg-gray-300 border-gray-700">
               <CardContent className="p-4">
                 <div className="flex items-center mb-2">
-                  <User className="h-4 w-4 mr-2 text-green-400" />
+                  <User className="h-4 w-4 mr-2 text-red-800" />
                   <span className="font-semibold text-sm">{customer.name}</span>
                 </div>
                 <div className="flex justify-between items-center">

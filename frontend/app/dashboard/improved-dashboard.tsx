@@ -45,14 +45,24 @@ const unreadConversations = [
 
 // Mock data for segmentation topics
 const segmentationData = [
-  { name: "Shipping Issues", value: 35 },
-  { name: "Product Quality", value: 28 },
-  { name: "Returns", value: 22 },
-  { name: "Billing", value: 15 },
-  { name: "General Inquiries", value: 40 },
+  { name: "Service Quality", value: 35 },
+  { name: "Cleanliness", value: 28 },
+  { name: "Food and Amenities", value: 22 },
+  { name: "Noise and Privacy", value: 15 },
+  { name: "Check-in and Check-out", value: 40 },
+  { name: "Price", value: 40 },
+  { name: "Other", value: 40 },
 ];
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884D8"];
+const COLORS = [
+  "#091057", // Dark Blue
+  "#EC8305", // Charcoal
+  "#F95454", // Dark Olive Green
+  "#AB886D", // Dark Slate Gray
+  "#387478", // Dark Purple
+  "#72BF78", // Dark Brown
+  "#7E60BF", // Dark Slate Gray (alternative)
+];
 
 export function ImprovedDashboard() {
   const [autoReplyMessage, setAutoReplyMessage] = useState("");
@@ -153,7 +163,7 @@ export function ImprovedDashboard() {
                     ))}
                   </Pie>
                   <Tooltip />
-                  <Legend />
+                  {/* <Legend /> */}
                 </PieChart>
               </ResponsiveContainer>
             </CardContent>
