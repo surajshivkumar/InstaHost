@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
-from .services import search_documents, search_documents_with_llm
+from .services import search_documents, search_documents_with_llm, generate_responses
 from .models import ChatRequest, customerQuestion
 import os
 
@@ -35,8 +35,9 @@ async def csrBot(request: customerQuestion):
     try:
         lastMessage = request.lastMessage
         print(lastMessage)
+        res = generate_responses(lastMessage)
         # Convert the response to a dictionary
-        response_content = {"documents": "Received"}
+        response_content = {"documents": res.content}
 
         return JSONResponse(content=response_content)
 
