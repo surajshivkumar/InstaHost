@@ -6,17 +6,13 @@
 
 ## Features
 
-1. **Complaint Submission**: Users can file complaints with ease which gets recorded
-2. **AI-Generated Responses**: AI generates relevant responses based on a knowledge base.
-3. **Complaint Categorization**: Complaints are automatically segmented into predefined categories for faster resolution.
+1. ** Query Submission**: Users can ask questions regarding their hotel stay
+2. ** AI-Generated Resolution**: AI tries to resolve the users query
+3. **Complaint Submission**: Users can file complaints with ease which gets recorded
+4. **AI-Generated Responses**: AI generates relevant responses based on a knowledge base.
+5. **Complaint Categorization**: Complaints are automatically segmented into predefined categories for faster resolution.
 
-## How It Works
 
-1. **User Submits Complaint**: Users can easily submit their complaints using the platform, specifying the issue they faced in various categories.
-   
-2. **AI-Generated Response**: Based on a knowledge base, AI analyzes the complaint and generates a meaningful response that aligns with the complaint and the context.
-   
-3. **Complaint Segmentation**: The system then categorizes the complaint into a predefined set of categories (e.g., Cleanliness, Service Quality, Price, etc.) to streamline future handling and resolution.
 
 ## Technologies Used
 
@@ -25,6 +21,7 @@
 - **Chroma Vectorstore**
 - ** VCon Modules**
 - ** VCon Datasets**
+- ** Next.js **
 
 ## Setup
 
