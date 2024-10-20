@@ -44,7 +44,14 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@/app/components/ui-admin/alert";
-import { Plus, Trash2, Search, Edit, AlertCircle } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Search,
+  Edit,
+  AlertCircle,
+  BookOpen,
+} from "lucide-react";
 import axios from "axios";
 // import { toast } from "@/app/components/ui-admin/use-toast";
 
@@ -230,8 +237,11 @@ export default function Page() {
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8 text-center text-[#FF5A5F]">
-          Knowledge Base Editor
+        <h1 className="text-4xl font-bold mb-8 text-center text-[#FF5A5F] flex items-center justify-center">
+          <BookOpen className="mr-3" />
+          {"   "}
+          {/* Adds margin to the right to space the icon from the text */}
+          Rule Book
         </h1>
 
         {alert.show && (

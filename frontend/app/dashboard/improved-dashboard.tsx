@@ -29,6 +29,7 @@ import {
   Clock,
   Caravan,
   TentTree,
+  BookOpen,
 } from "lucide-react";
 
 // Mock data for unread conversations
@@ -152,6 +153,9 @@ export function ImprovedDashboard() {
               Search
             </Button>
             <Bell className="text-primary-foreground" size={24} />
+            <Link href="/management">
+              <BookOpen className="text-primary-foreground" size={24} />
+            </Link>
           </div>
         </div>
       </header>
