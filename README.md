@@ -6,8 +6,8 @@
 
 ## Features
 
-1. ** Query Submission**: Users can ask questions regarding their hotel stay
-2. ** AI-Generated Resolution**: AI tries to resolve the users query
+1. **Query Submission**: Users can ask questions regarding their hotel stay
+2. **AI-Generated Resolution**: AI tries to resolve the users query
 3. **Complaint Submission**: Users can file complaints with ease which gets recorded
 4. **AI-Generated Responses**: AI generates relevant responses based on a knowledge base.
 5. **Complaint Categorization**: Complaints are automatically segmented into predefined categories for faster resolution.
@@ -19,9 +19,9 @@
 - **Python**
 - **OpenAI GPT-3.5-turbo**
 - **Chroma Vectorstore**
-- ** VCon Modules**
-- ** VCon Datasets**
-- ** Next.js **
+- **VCon Modules**
+- **VCon Datasets**
+- **Next.js **
 
 ## Setup
 
