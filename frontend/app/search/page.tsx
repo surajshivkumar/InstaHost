@@ -13,9 +13,9 @@ import { Dumbbell, Search, User, ChevronDown, ChevronUp } from "lucide-react";
 
 export default function GymConversationSearchComponent() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(
     null
   );
@@ -30,39 +30,11 @@ export default function GymConversationSearchComponent() {
           throw new Error("No search results found in session storage.");
         }
 
-        // Parse the results from session storage and prepend "/Conversations/" to each file path
-        let filePaths = JSON.parse(results);
-        const filePathsUnique = Array.from(new Set(filePaths));
-        filePaths = filePathsUnique.map((path) => `/Conversations/${path}`);
-
-        const conversations = [];
-
-        // Fetch conversation details from each file path
-        for (const filePath of filePaths) {
-          const response = await fetch(filePath);
-          const data = await response.json();
-
-          const customer = data.parties.find(
-            (party) => party.meta.role === "customer"
-          );
-          const agent = data.parties.find(
-            (party) => party.meta.role === "agent"
-          );
-
-          if (customer && agent) {
-            conversations.push({
-              customerName: customer.name,
-              customerPhone: customer.tel,
-              customerEmail: customer.email,
-              agentName: agent.name,
-              fullConversation: data.analysis[0].body, // Assuming full conversation is here
-              date: data.created_at,
-            });
-          }
-        }
+        // Parse the results from session storage
+        const conversations = JSON.parse(results);
 
         setSearchResults(conversations);
-      } catch (err) {
+      } catch (err: any) {
         setError(err.message);
       } finally {
         setLoading(false);
