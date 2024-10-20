@@ -34,10 +34,12 @@ async def csrBot(request: customerQuestion):
     """Handles search interaction via POST request."""
     try:
         lastMessage = request.lastMessage
-        print(lastMessage)
-        res = generate_responses(lastMessage)
+
+        # Make sure to await the asynchronous function
+        res = await generate_responses(lastMessage)
+
         # Convert the response to a dictionary
-        response_content = {"documents": res.content}
+        response_content = {"documents": res}
 
         return JSONResponse(content=response_content)
 

@@ -7,6 +7,10 @@ from langchain.schema import Document
 from typing import List, Dict, Any
 import json
 from dotenv import load_dotenv
+from typing import Dict, Optional
+import httpx
+
+from langchain.schema import SystemMessage, HumanMessage
 
 # Load environment variables from .env file
 load_dotenv()
@@ -170,36 +174,67 @@ def search_documents_with_llm(question: str, directory: str):
     return response
 
 
-from langchain.schema import HumanMessage, SystemMessage
-
-
-def generate_responses(question: str):
-    # client = OpenAI(
-    # api_key = openai_api_key
-    # )
-    # MODEL = "gpt-3.5-turbo"
-
-    llm = ChatOpenAI(model_name="gpt-3.5-turbo")
-    rules = {
-        "no smoking": "Smoking is strictly prohibited in all areas of the room and building.",
-        "cancellation policy": "No cancellations or modifications are allowed within 48 hours of your booking. Cancellations outside of this period may incur a fee.",
-        "check-in time": "Check-in starts at 3:00 PM, and check-out is by 11:00 AM. Early check-ins and late check-outs may be arranged upon request.",
-        "pet policy": "Pets are welcome with a surcharge of $50 per stay. However, restrictions apply based on the type and size of pets.",
-    }
-
+async def get_policies_from_nextjs() -> Dict[str, str]:
+    """Fetch all policies from Next.js API"""
     try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get("http://localhost:3001/api/policies")
+
+            if response.status_code != 200:
+                print(f"API error: Status {response.status_code}")
+                return {}
+
+            policies = response.json()
+
+            # Convert to dictionary format {title: content}
+            policy_dict = {
+                policy["title"].lower(): policy["content"] for policy in policies
+            }
+
+            return policy_dict
+    except Exception as e:
+        print(f"API error: {str(e)}")
+        return {}
+
+
+async def generate_responses(question: str) -> Optional[str]:
+    try:
+        # Initialize LLM with langchain_openai
+        llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0)
+
+        # Fetch policies from Next.js API asynchronously
+        rules = await get_policies_from_nextjs()
+
+        if not rules:
+            return "Error: Unable to fetch policies from API"
+        rules_str = "\n".join([f"- {key}: {value}" for key, value in rules.items()])
+
         messages = [
             SystemMessage(
                 content=(
-                    "If the user's question '{}' resembles any of the pre-defined rules '{}', "
-                    "return the corresponding rule value. Otherwise, act as a helpful assistant who knows all the hotel policies."
-                ).format(question, rules)
+                    "You are a helpful hotel assistant. Use these policies as your knowledge base: "
+                    f"{rules_str}. If the user's question '{question}' matches any policy, provide "
+                    "the corresponding information. If no exact match is found, use the policies "
+                    "as context to provide a helpful response. Always maintain a professional "
+                    "and courteous tone."
+                )
             ),
             HumanMessage(content=question),
         ]
 
-        # Generate the response
-        response = llm(messages)
-        return response
+        # Generate response
+        response = await llm.ainvoke(messages)
+
+        return response.content
+
     except Exception as e:
         return f"Error: {str(e)}"
+
+
+# Synchronous version if needed
+import asyncio
+
+
+def generate_responses_sync(question: str) -> Optional[str]:
+    """Synchronous wrapper for generate_responses"""
+    return asyncio.run(generate_responses(question))
